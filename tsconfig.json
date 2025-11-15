@@ -1,0 +1,34 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@lib/*": [
+        "src/lib/*"
+      ],
+      "@CVIS/*": [
+        "src/lib/CVIS/*"
+      ],
+      "@CParser/*": [
+        "src/lib/CVIS/CParser/*"
+      ],
+      "@CMachine/*": [
+        "src/lib/CVIS/CMachine/*"
+      ],
+      "@CVisual/*": [
+        "src/lib/CVIS/CVisual/*"
+      ]
+    }
+  }
+}
