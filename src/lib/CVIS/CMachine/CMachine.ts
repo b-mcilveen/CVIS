@@ -1516,6 +1516,17 @@ export class ProgramStateMachine {
 
     }
 
+    // Gets increment size based on the type for pointer arithmetic
+    private getPointerIncrementSize(type: Type): number {
+        if (type.pointerLevel > 0) {
+            return getTypeSize({
+                primitiveType: type.primitiveType,
+                pointerLevel: type.pointerLevel - 1
+            });
+        }
+        return 1;
+    }
+
     // Evaluate a prefix expression
     private evaluatePrefixExpression(expression: AST.PrefixExpression): EvalResult {
         let argument: EvalResult = this.evaluateExpression(expression.argument);
@@ -1526,8 +1537,8 @@ export class ProgramStateMachine {
                     let variable = this.lookupVariable((expression.argument as AST.Identifier).name);
                     if (variable) {
                         let variableObject = this.getVariableValue(variable);
-                        let variableCurrentValue = variableObject.value
-                        variableCurrentValue += 1;
+                        let incrementSize = this.getPointerIncrementSize(variableObject.type);
+                        let variableCurrentValue = variableObject.value + incrementSize;
                         this.setVariableValue(variable, variableCurrentValue, variable.type);
                         return {
                             isLValue: false,
@@ -1535,6 +1546,17 @@ export class ProgramStateMachine {
                             type: variableObject.type
                         }
                     }
+                }
+            
+                if (argument.isLValue && argument.address !== undefined) {
+                    let incrementSize = this.getPointerIncrementSize(argument.type);
+                    let newValue = argument.value + incrementSize;
+                    this.memoryMachine.writeMemory(argument.address, argument.type, newValue);
+                    return {
+                        isLValue: false,
+                        value: newValue,
+                        type: argument.type
+                    };
                 }
                 return {
                     isLValue: false,
@@ -1546,8 +1568,8 @@ export class ProgramStateMachine {
                     let variable = this.lookupVariable((expression.argument as AST.Identifier).name);
                     if (variable) {
                         let variableObject = this.getVariableValue(variable);
-                        let variableCurrentValue = variableObject.value
-                        variableCurrentValue -= 1;
+                        let incrementSize = this.getPointerIncrementSize(variableObject.type);
+                        let variableCurrentValue = variableObject.value - incrementSize;
                         this.setVariableValue(variable, variableCurrentValue, variable.type);
                         return {
                             isLValue: false,
@@ -1555,6 +1577,17 @@ export class ProgramStateMachine {
                             type: variableObject.type
                         }
                     }
+                }
+                
+                if (argument.isLValue && argument.address !== undefined) {
+                    let incrementSize = this.getPointerIncrementSize(argument.type);
+                    let newValue = argument.value - incrementSize;
+                    this.memoryMachine.writeMemory(argument.address, argument.type, newValue);
+                    return {
+                        isLValue: false,
+                        value: newValue,
+                        type: argument.type
+                    };
                 }
                 return {
                     isLValue: false,
@@ -1578,7 +1611,8 @@ export class ProgramStateMachine {
                     if (variable) {
                         let variableObject = this.getVariableValue(variable);
                         let old = variableObject.value;
-                        let variableCurrentValue = old + 1;
+                        let incrementSize = this.getPointerIncrementSize(variableObject.type);
+                        let variableCurrentValue = old + incrementSize;
                         this.setVariableValue(variable, variableCurrentValue, variable.type);
                         return {
                             isLValue: false,
@@ -1586,6 +1620,16 @@ export class ProgramStateMachine {
                             type: variableObject.type
                         }
                     }
+                }
+                if (argument.isLValue && argument.address !== undefined) {
+                    let old = argument.value;
+                    let incrementSize = this.getPointerIncrementSize(argument.type);
+                    this.memoryMachine.writeMemory(argument.address, argument.type, old + incrementSize);
+                    return {
+                        isLValue: false,
+                        value: old,
+                        type: argument.type
+                    };
                 }
                 return {
                     isLValue: false,
@@ -1598,7 +1642,8 @@ export class ProgramStateMachine {
                     if (variable) {
                         let variableObject = this.getVariableValue(variable);
                         let old = variableObject.value;
-                        let variableCurrentValue = old - 1;
+                        let incrementSize = this.getPointerIncrementSize(variableObject.type);
+                        let variableCurrentValue = old - incrementSize;
                         this.setVariableValue(variable, variableCurrentValue, variable.type);
                         return {
                             isLValue: false,
@@ -1606,6 +1651,16 @@ export class ProgramStateMachine {
                             type: variableObject.type
                         }
                     }
+                }
+                if (argument.isLValue && argument.address !== undefined) {
+                    let old = argument.value;
+                    let incrementSize = this.getPointerIncrementSize(argument.type);
+                    this.memoryMachine.writeMemory(argument.address, argument.type, old - incrementSize);
+                    return {
+                        isLValue: false,
+                        value: old,
+                        type: argument.type
+                    };
                 }
                 return {
                     isLValue: false,
